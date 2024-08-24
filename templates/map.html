@@ -25,7 +25,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_76f0295e5be0d8deb7bb0b04e9e07678 {
+                #map_254d6ea0a53e5fa60c7da943dcab4606 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -39,14 +39,14 @@
 <body>
     
     
-            <div class="folium-map" id="map_76f0295e5be0d8deb7bb0b04e9e07678" ></div>
+            <div class="folium-map" id="map_254d6ea0a53e5fa60c7da943dcab4606" ></div>
         
 </body>
 <script>
     
     
-            var map_76f0295e5be0d8deb7bb0b04e9e07678 = L.map(
-                "map_76f0295e5be0d8deb7bb0b04e9e07678",
+            var map_254d6ea0a53e5fa60c7da943dcab4606 = L.map(
+                "map_254d6ea0a53e5fa60c7da943dcab4606",
                 {
                     center: [50.0869808355617, 14.420696466020118],
                     crs: L.CRS.EPSG3857,
@@ -60,13 +60,25 @@
 
         
     
-            var tile_layer_f97c46b86e8bb5a30fe3fbc7627d16c6 = L.tileLayer(
+            var tile_layer_936a2706b4088f1b463e8453756d54e2 = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detectRetina": false, "maxNativeZoom": 19, "maxZoom": 19, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
             );
         
     
-            tile_layer_f97c46b86e8bb5a30fe3fbc7627d16c6.addTo(map_76f0295e5be0d8deb7bb0b04e9e07678);
+            tile_layer_936a2706b4088f1b463e8453756d54e2.addTo(map_254d6ea0a53e5fa60c7da943dcab4606);
+        
+    
+            var marker_13541000fd9db050b2566d73a70d2794 = L.marker(
+                [50.08755474796508, 14.423318842912195],
+                {}
+            ).addTo(map_254d6ea0a53e5fa60c7da943dcab4606);
+        
+    
+            var icon_577fdd3470b21e787eacf38fd108f8ab = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "bicycle", "iconColor": "white", "markerColor": "green", "prefix": "fa"}
+            );
+            marker_13541000fd9db050b2566d73a70d2794.setIcon(icon_577fdd3470b21e787eacf38fd108f8ab);
         
 </script>
 </html>

@@ -25,6 +25,7 @@ app = Flask(__name__)
 
 def create_map():
     prg_map=folium.Map(location=[50.0869808355617, 14.420696466020118],zoom_start=16)
+    folium.Marker([50.08755474796508, 14.423318842912195], icon=folium.Icon(color="green", prefix='fa',icon='bicycle'),).add_to(prg_map)
 
     return prg_map
 

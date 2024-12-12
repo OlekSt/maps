@@ -25,7 +25,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_313964d99151096c9955068c86c46345 {
+                #map_9c4c68a78da98b71b9fde24fa443c77e {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -35,18 +35,23 @@
                 .leaflet-container { font-size: 1rem; }
             </style>
         
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/MarkerCluster.Default.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-locatecontrol/0.66.2/L.Control.Locate.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-locatecontrol/0.66.2/L.Control.Locate.min.css"/>
 </head>
 <body>
     
     
-            <div class="folium-map" id="map_313964d99151096c9955068c86c46345" ></div>
+            <div class="folium-map" id="map_9c4c68a78da98b71b9fde24fa443c77e" ></div>
         
 </body>
 <script>
     
     
-            var map_313964d99151096c9955068c86c46345 = L.map(
-                "map_313964d99151096c9955068c86c46345",
+            var map_9c4c68a78da98b71b9fde24fa443c77e = L.map(
+                "map_9c4c68a78da98b71b9fde24fa443c77e",
                 {
                     center: [50.0869808355617, 14.420696466020118],
                     crs: L.CRS.EPSG3857,
@@ -60,61 +65,75 @@
 
         
     
-            var tile_layer_36e9a606a6a42b08dc21ad1d1d281596 = L.tileLayer(
+            var tile_layer_56439af8745eaf62f3aa3ec3959ac472 = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detectRetina": false, "maxNativeZoom": 19, "maxZoom": 19, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
             );
         
     
-            tile_layer_36e9a606a6a42b08dc21ad1d1d281596.addTo(map_313964d99151096c9955068c86c46345);
+            tile_layer_56439af8745eaf62f3aa3ec3959ac472.addTo(map_9c4c68a78da98b71b9fde24fa443c77e);
         
     
-            var marker_36e21f1174f910cbb77d786881fd4433 = L.marker(
+            var marker_cluster_fd8f461fb15be9a35af4a82d3579196c = L.markerClusterGroup(
+                {}
+            );
+        
+    
+            var marker_6ae9a405b2e2d304edc8dcd0d57b3d1d = L.marker(
                 [50.08755474796508, 14.423318842912195],
                 {}
-            ).addTo(map_313964d99151096c9955068c86c46345);
+            ).addTo(marker_cluster_fd8f461fb15be9a35af4a82d3579196c);
         
     
-            var icon_d0efc3778105ba40f4a1cf94e940c1c2 = L.AwesomeMarkers.icon(
+            var icon_ea46a1167df97e852afef9dadab115a5 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "bicycle", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_36e21f1174f910cbb77d786881fd4433.setIcon(icon_d0efc3778105ba40f4a1cf94e940c1c2);
+            marker_6ae9a405b2e2d304edc8dcd0d57b3d1d.setIcon(icon_ea46a1167df97e852afef9dadab115a5);
         
     
-            var marker_d155cb58689357f874bf2e609d879f0e = L.marker(
+            var marker_b115b2a58c18919f2c3ff50d5f93aaa0 = L.marker(
                 [50.090322944037986, 14.42162471740614],
                 {}
-            ).addTo(map_313964d99151096c9955068c86c46345);
+            ).addTo(marker_cluster_fd8f461fb15be9a35af4a82d3579196c);
         
     
-            var icon_5ecd02e68056a16f21e810e1d85b9a5a = L.AwesomeMarkers.icon(
+            var icon_65f726af695f8095ca013272d7847de6 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "heart", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_d155cb58689357f874bf2e609d879f0e.setIcon(icon_5ecd02e68056a16f21e810e1d85b9a5a);
+            marker_b115b2a58c18919f2c3ff50d5f93aaa0.setIcon(icon_65f726af695f8095ca013272d7847de6);
         
     
-            var marker_ceeefea5e4e4703bdf1a23b459bdc812 = L.marker(
+            var marker_1a3ca578aad4f47ba95c3f4f0264d159 = L.marker(
                 [50.08441631969368, 14.428302542337063],
                 {}
-            ).addTo(map_313964d99151096c9955068c86c46345);
+            ).addTo(marker_cluster_fd8f461fb15be9a35af4a82d3579196c);
         
     
-            var icon_7715a07c391958529a3664ec0cc2ba2c = L.AwesomeMarkers.icon(
+            var icon_a6be25bf63799d0390a4b71d193fbc26 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "phone", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_ceeefea5e4e4703bdf1a23b459bdc812.setIcon(icon_7715a07c391958529a3664ec0cc2ba2c);
+            marker_1a3ca578aad4f47ba95c3f4f0264d159.setIcon(icon_a6be25bf63799d0390a4b71d193fbc26);
         
     
-            var marker_6b27eba6743af232f06f27be7b758dc0 = L.marker(
+            var marker_cdbc490100e06f7cd31d842c51bd8b62 = L.marker(
                 [50.081328739825466, 14.41321606932961],
                 {}
-            ).addTo(map_313964d99151096c9955068c86c46345);
+            ).addTo(marker_cluster_fd8f461fb15be9a35af4a82d3579196c);
         
     
-            var icon_376cdb2e5962f5ce08ca9fc2992ffe44 = L.AwesomeMarkers.icon(
+            var icon_20c82801c584ed504ac9e947785aadcb = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "masks-theater", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_6b27eba6743af232f06f27be7b758dc0.setIcon(icon_376cdb2e5962f5ce08ca9fc2992ffe44);
+            marker_cdbc490100e06f7cd31d842c51bd8b62.setIcon(icon_20c82801c584ed504ac9e947785aadcb);
+        
+    
+            marker_cluster_fd8f461fb15be9a35af4a82d3579196c.addTo(map_9c4c68a78da98b71b9fde24fa443c77e);
+        
+    
+            var locate_control_d838e7b96653548f70fec62e6c10dd64 = L.control.locate(
+                {}
+            ).addTo(map_9c4c68a78da98b71b9fde24fa443c77e);
+            
         
 </script>
 </html>

@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt  #3.3.2
 import seaborn as sns  #0.11.1
 import folium  #0.14.0
 from folium import plugins
+from folium.plugins import LocateControl, MarkerCluster
 import plotly.express as px  #5.1.0
 
 ## for simple routing
@@ -25,10 +26,12 @@ app = Flask(__name__)
 
 def create_map():
     prg_map=folium.Map(location=[50.0869808355617, 14.420696466020118],zoom_start=16)
-    folium.Marker([50.08755474796508, 14.423318842912195], icon=folium.Icon(color="red", prefix='fa',icon='bicycle'),).add_to(prg_map)
-    folium.Marker([50.090322944037986, 14.42162471740614], icon=folium.Icon(color="red", prefix='fa',icon='heart'),).add_to(prg_map)
-    folium.Marker([50.08441631969368, 14.428302542337063], icon=folium.Icon(color="red", prefix='fa',icon='phone'),).add_to(prg_map)
-    folium.Marker([50.081328739825466, 14.41321606932961], icon=folium.Icon(color="red", prefix='fa',icon='masks-theater'),).add_to(prg_map)
+    marker_cluster = MarkerCluster().add_to(prg_map)
+    folium.Marker([50.08755474796508, 14.423318842912195], icon=folium.Icon(color="red", prefix='fa',icon='bicycle'),).add_to(marker_cluster)
+    folium.Marker([50.090322944037986, 14.42162471740614], icon=folium.Icon(color="red", prefix='fa',icon='heart'),).add_to(marker_cluster)
+    folium.Marker([50.08441631969368, 14.428302542337063], icon=folium.Icon(color="red", prefix='fa',icon='phone'),).add_to(marker_cluster)
+    folium.Marker([50.081328739825466, 14.41321606932961], icon=folium.Icon(color="red", prefix='fa',icon='masks-theater'),).add_to(marker_cluster)
+    LocateControl(auto_start=False).add_to(prg_map)
 
     return prg_map
 

@@ -27,6 +27,40 @@ app = Flask(__name__)
 def create_map():
     # prg_map=folium.Map(location=[50.0869808355617, 14.420696466020118],zoom_start=16)
     prg_map=folium.Map(location=[50.10757904960116, 14.420951629813585],zoom_start=16)
+
+    responsive_script = """
+    <script>
+        // Get the map container
+        var map = document.querySelector('.folium-map');
+        
+        // Function to adjust zoom based on screen width
+        function adjustZoom() {
+            var mapObj = document.querySelector('.folium-map')._leaflet_map;
+            if (window.innerWidth < 768) {
+                // Mobile view - set zoom to a lower level
+                mapObj.setZoom(12);
+            } else {
+                // Desktop view - use original zoom
+                mapObj.setZoom(16);
+            }
+        }
+        
+        // Add a listener for map load event
+        if (map._leaflet_map) {
+            adjustZoom();
+        } else {
+            map.addEventListener('leaflet.map.init', function() {
+                // Run after the map is initialized
+                setTimeout(adjustZoom, 100);
+            });
+        }
+        
+        // Adjust zoom when window is resized
+        window.addEventListener('resize', adjustZoom);
+    </script>
+    """
+
+    prg_map.get_root().html.add_child(folium.Element(responsive_script))
     
     marker_cluster = MarkerCluster().add_to(prg_map)
     # folium.Marker([50.08755474796508, 14.423318842912195], icon=folium.Icon(color="red", prefix='fa',icon='bicycle'),).add_to(marker_cluster)
@@ -55,6 +89,8 @@ def create_map():
                    popup=folium.Popup('Restaurant', max_width=300),
                    icon=folium.Icon(color="red", prefix='fa',icon='phone'),).add_to(marker_cluster)
     LocateControl(auto_start=False).add_to(prg_map)
+
+
 
     return prg_map
 

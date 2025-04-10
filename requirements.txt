@@ -11,6 +11,7 @@ Flask==3.0.3
 folium==0.17.0
 fonttools==4.53.1
 geopandas==0.14.4
+gunicorn==21.2.0
 immutabledict==4.2.0
 itsdangerous==2.2.0
 kiwisolver==1.4.5

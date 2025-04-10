@@ -25,12 +25,21 @@ from ortools.constraint_solver import routing_enums_pb2
 app = Flask(__name__)
 
 def create_map():
-    prg_map=folium.Map(location=[50.0869808355617, 14.420696466020118],zoom_start=16)
+    # prg_map=folium.Map(location=[50.0869808355617, 14.420696466020118],zoom_start=16)
+    prg_map=folium.Map(location=[50.10757904960116, 14.420951629813585],zoom_start=16)
+    
     marker_cluster = MarkerCluster().add_to(prg_map)
-    folium.Marker([50.08755474796508, 14.423318842912195], icon=folium.Icon(color="red", prefix='fa',icon='bicycle'),).add_to(marker_cluster)
-    folium.Marker([50.090322944037986, 14.42162471740614], icon=folium.Icon(color="red", prefix='fa',icon='heart'),).add_to(marker_cluster)
-    folium.Marker([50.08441631969368, 14.428302542337063], icon=folium.Icon(color="red", prefix='fa',icon='phone'),).add_to(marker_cluster)
-    folium.Marker([50.081328739825466, 14.41321606932961], icon=folium.Icon(color="red", prefix='fa',icon='masks-theater'),).add_to(marker_cluster)
+    # folium.Marker([50.08755474796508, 14.423318842912195], icon=folium.Icon(color="red", prefix='fa',icon='bicycle'),).add_to(marker_cluster)
+    # folium.Marker([50.090322944037986, 14.42162471740614], icon=folium.Icon(color="red", prefix='fa',icon='heart'),).add_to(marker_cluster)
+    # folium.Marker([50.08441631969368, 14.428302542337063], icon=folium.Icon(color="red", prefix='fa',icon='phone'),).add_to(marker_cluster)
+    # folium.Marker([50.081328739825466, 14.41321606932961], icon=folium.Icon(color="red", prefix='fa',icon='masks-theater'),).add_to(marker_cluster)
+    folium.Marker([50.10544963658487, 14.427315231276873], icon=folium.Icon(color="red", prefix='fa',icon='bicycle'),).add_to(marker_cluster)
+    folium.Marker([50.10831045673811, 14.424126005952495], icon=folium.Icon(color="red", prefix='fa',icon='heart'),).add_to(marker_cluster)
+    folium.Marker([50.10965658330681, 14.420232509911955], icon=folium.Icon(color="red", prefix='fa',icon='phone'),).add_to(marker_cluster)
+    folium.Marker([50.110355321102915, 14.413503010582618], icon=folium.Icon(color="red", prefix='fa',icon='masks-theater'),).add_to(marker_cluster)
+    folium.Marker([50.10812548984484, 14.412958241589292], icon=folium.Icon(color="red", prefix='fa',icon='bicycle'),).add_to(marker_cluster)
+    folium.Marker([50.106058787595565, 14.410833563743788], icon=folium.Icon(color="red", prefix='fa',icon='heart'),).add_to(marker_cluster)
+    folium.Marker([50.105211210875616, 14.415743779890281], icon=folium.Icon(color="red", prefix='fa',icon='phone'),).add_to(marker_cluster)
     LocateControl(auto_start=False).add_to(prg_map)
 
     return prg_map

@@ -25,7 +25,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_2ae822b5d99ca88e2b37436dee04fb0d {
+                #map_60fd8fbca42039c3e3e41c5f62b0d3dc {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -44,18 +44,255 @@
 <body>
     
     
-            <div class="folium-map" id="map_2ae822b5d99ca88e2b37436dee04fb0d" ></div>
+    <style>
+    .folium-map {
+        width: 100% !important;
+        height: 100% !important;
+    }
+    .route-controls {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+        min-width: 250px;
+    }
+    .control-group {
+        margin-bottom: 10px;
+    }
+    .control-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .control-group select {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .calculate-btn {
+        width: 100%;
+        padding: 10px;
+        background: #007cff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .calculate-btn:hover {
+        background: #0056b3;
+    }
+    .route-info {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        display: none;
+    }
+    </style>
+    
+    <div class="route-controls">
+        <h4 style="margin-top: 0;">Route Calculator</h4>
+        
+        <div class="control-group">
+            <label for="start-point">Start Point:</label>
+            <select id="start-point">
+                <option value="">No specific start</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="end-point">End Point:</label>
+            <select id="end-point">
+                <option value="">No specific end</option>
+            </select>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateRoute()">Calculate Route</button>
+        <button class="calculate-btn" onclick="clearRoute()" style="background: #6c757d; margin-top: 5px;">Clear Route</button>
+        
+        <div id="route-info" class="route-info">
+            <div id="route-details"></div>
+        </div>
+    </div>
+    
+    <script>
+    let currentRouteLayer = null;
+    let map = null;
+    
+    // Wait for folium map to be fully loaded
+    function waitForMap() {
+        return new Promise((resolve) => {
+            function checkMap() {
+                // Try multiple ways to access the map
+                const mapDiv = document.querySelector('.folium-map div[id^="map"]');
+                if (mapDiv && window[mapDiv.id]) {
+                    map = window[mapDiv.id];
+                    resolve(map);
+                } else {
+                    setTimeout(checkMap, 100);
+                }
+            }
+            checkMap();
+        });
+    }
+    
+    // Initialize when page loads
+    window.addEventListener('load', async function() {
+        await waitForMap();
+        populateDropdowns();
+    });
+    
+    function populateDropdowns() {
+        // Get points from server
+        fetch('/get-points')
+        .then(response => response.json())
+        .then(points => {
+            const startSelect = document.getElementById('start-point');
+            const endSelect = document.getElementById('end-point');
+            
+            // Clear existing options (except first)
+            startSelect.innerHTML = '<option value="">No specific start</option>';
+            endSelect.innerHTML = '<option value="">No specific end</option>';
+            
+            points.forEach((point) => {
+                const option1 = new Option(point.name, point.index);
+                const option2 = new Option(point.name, point.index);
+                startSelect.add(option1);
+                endSelect.add(option2);
+            });
+        })
+        .catch(error => console.error('Error loading points:', error));
+    }
+    
+    function calculateRoute() {
+        if (!map) {
+            alert('Map not ready yet, please try again in a moment');
+            return;
+        }
+        
+        const startIdx = document.getElementById('start-point').value;
+        const endIdx = document.getElementById('end-point').value;
+        
+        // Prepare request data
+        const requestData = {
+            start_idx: startIdx === '' ? null : parseInt(startIdx),
+            end_idx: endIdx === '' ? null : parseInt(endIdx)
+        };
+        
+        // Show loading
+        const btn = document.querySelector('.calculate-btn');
+        btn.textContent = 'Calculating...';
+        btn.disabled = true;
+        
+        // Make request to calculate route
+        fetch('/calculate-route', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            displayRoute(data);
+            btn.textContent = 'Calculate Route';
+            btn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error calculating route: ' + error.message);
+            btn.textContent = 'Calculate Route';
+            btn.disabled = false;
+        });
+    }
+    
+    function displayRoute(routeData) {
+        if (!map) {
+            console.error('Map not available');
+            return;
+        }
+        
+        // Remove previous route if exists
+        if (currentRouteLayer) {
+            map.removeLayer(currentRouteLayer);
+            currentRouteLayer = null;
+        }
+        
+        if (routeData.route_coordinates && routeData.route_coordinates.length > 1) {
+            // Create route polyline
+            currentRouteLayer = L.polyline(routeData.route_coordinates, {
+                color: '#007cff',
+                weight: 5,
+                opacity: 0.8,
+                dashArray: '10, 5'
+            });
+            
+            // Add to map
+            currentRouteLayer.addTo(map);
+            
+            // Add popup to route line
+            currentRouteLayer.bindPopup(`
+                <b>Optimized Route</b><br>
+                Distance: ${routeData.total_distance.toFixed(2)} km<br>
+                Stops: ${routeData.num_stops}
+            `);
+            
+            // Show route information in control panel
+            const routeInfo = document.getElementById('route-info');
+            const routeDetails = document.getElementById('route-details');
+            
+            let routeText = `<strong>Distance:</strong> ${routeData.total_distance.toFixed(2)} km<br>`;
+            routeText += `<strong>Stops:</strong> ${routeData.num_stops}<br>`;
+            routeText += `<strong>Type:</strong> ${routeData.is_circular ? 'Circular' : 'Point-to-Point'}<br><br>`;
+            routeText += '<strong>Route Order:</strong><br>';
+            
+            routeData.route_order.forEach((stop, index) => {
+                routeText += `${index + 1}. ${stop.name}<br>`;
+            });
+            
+            routeDetails.innerHTML = routeText;
+            routeInfo.style.display = 'block';
+            
+            // Fit map to show entire route
+            const group = new L.featureGroup([currentRouteLayer]);
+            map.fitBounds(group.getBounds().pad(0.1));
+        } else {
+            document.getElementById('route-info').style.display = 'none';
+        }
+    }
+    
+    function clearRoute() {
+        if (currentRouteLayer && map) {
+            map.removeLayer(currentRouteLayer);
+            currentRouteLayer = null;
+        }
+        document.getElementById('route-info').style.display = 'none';
+        
+        // Reset dropdowns
+        document.getElementById('start-point').value = '';
+        document.getElementById('end-point').value = '';
+    }
+    </script>
+    
+    
+            <div class="folium-map" id="map_60fd8fbca42039c3e3e41c5f62b0d3dc" ></div>
         
 </body>
 <script>
     
     
-            var map_2ae822b5d99ca88e2b37436dee04fb0d = L.map(
-                "map_2ae822b5d99ca88e2b37436dee04fb0d",
+            var map_60fd8fbca42039c3e3e41c5f62b0d3dc = L.map(
+                "map_60fd8fbca42039c3e3e41c5f62b0d3dc",
                 {
-                    center: [50.10757904960116, 14.420951629813585],
+                    center: [50.10759535514982, 14.417816048992472],
                     crs: L.CRS.EPSG3857,
-                    zoom: 16,
+                    zoom: 15,
                     zoomControl: true,
                     preferCanvas: false,
                 }
@@ -65,215 +302,215 @@
 
         
     
-            var tile_layer_562a33f6e3014e85d53de0cf76bde60a = L.tileLayer(
+            var tile_layer_b8b33960208cf48657dcaa5907c77c8b = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detectRetina": false, "maxNativeZoom": 19, "maxZoom": 19, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
             );
         
     
-            tile_layer_562a33f6e3014e85d53de0cf76bde60a.addTo(map_2ae822b5d99ca88e2b37436dee04fb0d);
+            tile_layer_b8b33960208cf48657dcaa5907c77c8b.addTo(map_60fd8fbca42039c3e3e41c5f62b0d3dc);
         
     
-            var marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0 = L.markerClusterGroup(
+            var marker_cluster_e73c07da5818c405bf5a122fcb62d112 = L.markerClusterGroup(
                 {}
             );
         
     
-            var marker_5d017aec49e80590a96153236f2bef65 = L.marker(
+            var marker_fb2f94140bcc5b70936bd532d95514d6 = L.marker(
                 [50.10544963658487, 14.427315231276873],
                 {}
-            ).addTo(marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0);
+            ).addTo(marker_cluster_e73c07da5818c405bf5a122fcb62d112);
         
     
-            var icon_64b92fb79081c0b53427b39dce8ae912 = L.AwesomeMarkers.icon(
+            var icon_83750abf7f5ee9c1cfb0d3ebf2a4c2be = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "bicycle", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_5d017aec49e80590a96153236f2bef65.setIcon(icon_64b92fb79081c0b53427b39dce8ae912);
+            marker_fb2f94140bcc5b70936bd532d95514d6.setIcon(icon_83750abf7f5ee9c1cfb0d3ebf2a4c2be);
         
     
-        var popup_df4a162b7df7dce77294338b2fe7d14d = L.popup({"maxWidth": 300});
+        var popup_d956fe2479475b09a20db40cf31051d3 = L.popup({"maxWidth": 300});
 
         
             
-                var html_05ff668c44676e353594e1c008bf4859 = $(`<div id="html_05ff668c44676e353594e1c008bf4859" style="width: 100.0%; height: 100.0%;">Planetarium</div>`)[0];
-                popup_df4a162b7df7dce77294338b2fe7d14d.setContent(html_05ff668c44676e353594e1c008bf4859);
+                var html_d90aaea33956a1b333f345e6c3a7c7f7 = $(`<div id="html_d90aaea33956a1b333f345e6c3a7c7f7" style="width: 100.0%; height: 100.0%;"><b>Planetarium</b><br>Point #1</div>`)[0];
+                popup_d956fe2479475b09a20db40cf31051d3.setContent(html_d90aaea33956a1b333f345e6c3a7c7f7);
             
         
 
-        marker_5d017aec49e80590a96153236f2bef65.bindPopup(popup_df4a162b7df7dce77294338b2fe7d14d)
+        marker_fb2f94140bcc5b70936bd532d95514d6.bindPopup(popup_d956fe2479475b09a20db40cf31051d3)
         ;
 
         
     
     
-            var marker_d85a0750c3286e2b0e3244719877c8b6 = L.marker(
+            var marker_6594ce953c6ed6951c501f2b11251719 = L.marker(
                 [50.10831045673811, 14.424126005952495],
                 {}
-            ).addTo(marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0);
+            ).addTo(marker_cluster_e73c07da5818c405bf5a122fcb62d112);
         
     
-            var icon_4e0ed5e941b35b752c22ac484c0ef5e9 = L.AwesomeMarkers.icon(
+            var icon_b86418f5a82b56bc94349ee007afbecd = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "heart", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_d85a0750c3286e2b0e3244719877c8b6.setIcon(icon_4e0ed5e941b35b752c22ac484c0ef5e9);
+            marker_6594ce953c6ed6951c501f2b11251719.setIcon(icon_b86418f5a82b56bc94349ee007afbecd);
         
     
-        var popup_83728f9b18257698ce3201b6aa8c8ea2 = L.popup({"maxWidth": 300});
+        var popup_f41490293d42f7b8db7d816ef9f4b290 = L.popup({"maxWidth": 300});
 
         
             
-                var html_67f4743d795ad0fd299a1bb08278f3aa = $(`<div id="html_67f4743d795ad0fd299a1bb08278f3aa" style="width: 100.0%; height: 100.0%;">Playground</div>`)[0];
-                popup_83728f9b18257698ce3201b6aa8c8ea2.setContent(html_67f4743d795ad0fd299a1bb08278f3aa);
+                var html_274b3005a53a3093f33d4d8c3bd635c5 = $(`<div id="html_274b3005a53a3093f33d4d8c3bd635c5" style="width: 100.0%; height: 100.0%;"><b>Playground</b><br>Point #2</div>`)[0];
+                popup_f41490293d42f7b8db7d816ef9f4b290.setContent(html_274b3005a53a3093f33d4d8c3bd635c5);
             
         
 
-        marker_d85a0750c3286e2b0e3244719877c8b6.bindPopup(popup_83728f9b18257698ce3201b6aa8c8ea2)
+        marker_6594ce953c6ed6951c501f2b11251719.bindPopup(popup_f41490293d42f7b8db7d816ef9f4b290)
         ;
 
         
     
     
-            var marker_9778d14561f21cb36f44ca2cb30f4859 = L.marker(
+            var marker_b4a51408a2e0d0f0764aa73d617adc04 = L.marker(
                 [50.10965658330681, 14.420232509911955],
                 {}
-            ).addTo(marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0);
+            ).addTo(marker_cluster_e73c07da5818c405bf5a122fcb62d112);
         
     
-            var icon_af604b7405e19e4115911323dcff0421 = L.AwesomeMarkers.icon(
+            var icon_897d9ce7e22fcffb557c39b01632392c = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "phone", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_9778d14561f21cb36f44ca2cb30f4859.setIcon(icon_af604b7405e19e4115911323dcff0421);
+            marker_b4a51408a2e0d0f0764aa73d617adc04.setIcon(icon_897d9ce7e22fcffb557c39b01632392c);
         
     
-        var popup_208f258e0ccba5d1fe4c79490fe274a2 = L.popup({"maxWidth": 300});
+        var popup_b84517f48e9cb1b4061133dff2e1560b = L.popup({"maxWidth": 300});
 
         
             
-                var html_bde4e4643d0d63c9e8fdcaf9f750cbe0 = $(`<div id="html_bde4e4643d0d63c9e8fdcaf9f750cbe0" style="width: 100.0%; height: 100.0%;">Tenis</div>`)[0];
-                popup_208f258e0ccba5d1fe4c79490fe274a2.setContent(html_bde4e4643d0d63c9e8fdcaf9f750cbe0);
+                var html_ba42a4f87bbd14c9c1c249c94b277437 = $(`<div id="html_ba42a4f87bbd14c9c1c249c94b277437" style="width: 100.0%; height: 100.0%;"><b>Tenis</b><br>Point #3</div>`)[0];
+                popup_b84517f48e9cb1b4061133dff2e1560b.setContent(html_ba42a4f87bbd14c9c1c249c94b277437);
             
         
 
-        marker_9778d14561f21cb36f44ca2cb30f4859.bindPopup(popup_208f258e0ccba5d1fe4c79490fe274a2)
+        marker_b4a51408a2e0d0f0764aa73d617adc04.bindPopup(popup_b84517f48e9cb1b4061133dff2e1560b)
         ;
 
         
     
     
-            var marker_9034f5a85c1cd1f4bc93a2b9add2d359 = L.marker(
+            var marker_7db618ed4de9c45a8761c187e870f053 = L.marker(
                 [50.110355321102915, 14.413503010582618],
                 {}
-            ).addTo(marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0);
+            ).addTo(marker_cluster_e73c07da5818c405bf5a122fcb62d112);
         
     
-            var icon_461b275ae6fc2e752adbb22c33d8f025 = L.AwesomeMarkers.icon(
+            var icon_e66d96bdd5aba9d506116646f7b1c8ef = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "masks-theater", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_9034f5a85c1cd1f4bc93a2b9add2d359.setIcon(icon_461b275ae6fc2e752adbb22c33d8f025);
+            marker_7db618ed4de9c45a8761c187e870f053.setIcon(icon_e66d96bdd5aba9d506116646f7b1c8ef);
         
     
-        var popup_94b708289fc2395e243c3824e261891b = L.popup({"maxWidth": 300});
+        var popup_02bd1445882165b4b2dc2b479889defa = L.popup({"maxWidth": 300});
 
         
             
-                var html_fccce35a13d7ae0bf415fe4cc041344a = $(`<div id="html_fccce35a13d7ae0bf415fe4cc041344a" style="width: 100.0%; height: 100.0%;">Waterfall</div>`)[0];
-                popup_94b708289fc2395e243c3824e261891b.setContent(html_fccce35a13d7ae0bf415fe4cc041344a);
+                var html_fb20a62611cc2544481bf90e4327e16f = $(`<div id="html_fb20a62611cc2544481bf90e4327e16f" style="width: 100.0%; height: 100.0%;"><b>Waterfall</b><br>Point #4</div>`)[0];
+                popup_02bd1445882165b4b2dc2b479889defa.setContent(html_fb20a62611cc2544481bf90e4327e16f);
             
         
 
-        marker_9034f5a85c1cd1f4bc93a2b9add2d359.bindPopup(popup_94b708289fc2395e243c3824e261891b)
+        marker_7db618ed4de9c45a8761c187e870f053.bindPopup(popup_02bd1445882165b4b2dc2b479889defa)
         ;
 
         
     
     
-            var marker_2e4e20f9a4a66282eaefe4181cbc99ed = L.marker(
+            var marker_323b33e9d7f609e8ee6a70875e468d8c = L.marker(
                 [50.10812548984484, 14.412958241589292],
                 {}
-            ).addTo(marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0);
+            ).addTo(marker_cluster_e73c07da5818c405bf5a122fcb62d112);
         
     
-            var icon_133c822188accf82cd52b2265b83e1bb = L.AwesomeMarkers.icon(
+            var icon_806aa3ae99686f49f9f9777c2935a7ac = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "bicycle", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_2e4e20f9a4a66282eaefe4181cbc99ed.setIcon(icon_133c822188accf82cd52b2265b83e1bb);
+            marker_323b33e9d7f609e8ee6a70875e468d8c.setIcon(icon_806aa3ae99686f49f9f9777c2935a7ac);
         
     
-        var popup_c51925f8563814f06463ab55b0281b83 = L.popup({"maxWidth": 300});
+        var popup_f5931485f6a6696c06657d1e0e52c24c = L.popup({"maxWidth": 300});
 
         
             
-                var html_b63c9256452096c6a3913357472b2c68 = $(`<div id="html_b63c9256452096c6a3913357472b2c68" style="width: 100.0%; height: 100.0%;">Bench</div>`)[0];
-                popup_c51925f8563814f06463ab55b0281b83.setContent(html_b63c9256452096c6a3913357472b2c68);
+                var html_d9ca8422264fe31c157942d186b0b177 = $(`<div id="html_d9ca8422264fe31c157942d186b0b177" style="width: 100.0%; height: 100.0%;"><b>Bench</b><br>Point #5</div>`)[0];
+                popup_f5931485f6a6696c06657d1e0e52c24c.setContent(html_d9ca8422264fe31c157942d186b0b177);
             
         
 
-        marker_2e4e20f9a4a66282eaefe4181cbc99ed.bindPopup(popup_c51925f8563814f06463ab55b0281b83)
+        marker_323b33e9d7f609e8ee6a70875e468d8c.bindPopup(popup_f5931485f6a6696c06657d1e0e52c24c)
         ;
 
         
     
     
-            var marker_4f1a2c19f9db0071161799979e532f09 = L.marker(
+            var marker_e156217c32d20f1e77b12be97682ec1c = L.marker(
                 [50.106058787595565, 14.410833563743788],
                 {}
-            ).addTo(marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0);
+            ).addTo(marker_cluster_e73c07da5818c405bf5a122fcb62d112);
         
     
-            var icon_a221ba956c397df7288b243a4df2264c = L.AwesomeMarkers.icon(
+            var icon_ce2f5a1a0cf500ec1a2db115f8fc4f6c = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "heart", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_4f1a2c19f9db0071161799979e532f09.setIcon(icon_a221ba956c397df7288b243a4df2264c);
+            marker_e156217c32d20f1e77b12be97682ec1c.setIcon(icon_ce2f5a1a0cf500ec1a2db115f8fc4f6c);
         
     
-        var popup_6ba3fe9bc14acbc888076819a14d57b6 = L.popup({"maxWidth": 300});
+        var popup_207acc0deb03e45e6c27f1d459bda6f5 = L.popup({"maxWidth": 300});
 
         
             
-                var html_a3f88c37184d9adb8482b2a7db8d3868 = $(`<div id="html_a3f88c37184d9adb8482b2a7db8d3868" style="width: 100.0%; height: 100.0%;">Turnik</div>`)[0];
-                popup_6ba3fe9bc14acbc888076819a14d57b6.setContent(html_a3f88c37184d9adb8482b2a7db8d3868);
+                var html_3a98d201bae4cbfc502ac49188f292c3 = $(`<div id="html_3a98d201bae4cbfc502ac49188f292c3" style="width: 100.0%; height: 100.0%;"><b>Turnik</b><br>Point #6</div>`)[0];
+                popup_207acc0deb03e45e6c27f1d459bda6f5.setContent(html_3a98d201bae4cbfc502ac49188f292c3);
             
         
 
-        marker_4f1a2c19f9db0071161799979e532f09.bindPopup(popup_6ba3fe9bc14acbc888076819a14d57b6)
+        marker_e156217c32d20f1e77b12be97682ec1c.bindPopup(popup_207acc0deb03e45e6c27f1d459bda6f5)
         ;
 
         
     
     
-            var marker_6cf33b009631a69df4bf5cc7b07f011c = L.marker(
+            var marker_006ea3da5601f53c7e2084859ab82120 = L.marker(
                 [50.105211210875616, 14.415743779890281],
                 {}
-            ).addTo(marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0);
+            ).addTo(marker_cluster_e73c07da5818c405bf5a122fcb62d112);
         
     
-            var icon_47dae05878fd6e1de19fbe915cb0e5fb = L.AwesomeMarkers.icon(
+            var icon_117c4ca2603fe4b60d11434eefaa797a = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "phone", "iconColor": "white", "markerColor": "red", "prefix": "fa"}
             );
-            marker_6cf33b009631a69df4bf5cc7b07f011c.setIcon(icon_47dae05878fd6e1de19fbe915cb0e5fb);
+            marker_006ea3da5601f53c7e2084859ab82120.setIcon(icon_117c4ca2603fe4b60d11434eefaa797a);
         
     
-        var popup_a1d3365083c78a467a0b5250171e02ba = L.popup({"maxWidth": 300});
+        var popup_7a6b961a66e436435199e90c41f3f13e = L.popup({"maxWidth": 300});
 
         
             
-                var html_75f7b1938f528aeb7594bd38ca902602 = $(`<div id="html_75f7b1938f528aeb7594bd38ca902602" style="width: 100.0%; height: 100.0%;">Restaurant</div>`)[0];
-                popup_a1d3365083c78a467a0b5250171e02ba.setContent(html_75f7b1938f528aeb7594bd38ca902602);
+                var html_8d7464f2d87fa568c438b961f48e59de = $(`<div id="html_8d7464f2d87fa568c438b961f48e59de" style="width: 100.0%; height: 100.0%;"><b>Restaurant</b><br>Point #7</div>`)[0];
+                popup_7a6b961a66e436435199e90c41f3f13e.setContent(html_8d7464f2d87fa568c438b961f48e59de);
             
         
 
-        marker_6cf33b009631a69df4bf5cc7b07f011c.bindPopup(popup_a1d3365083c78a467a0b5250171e02ba)
+        marker_006ea3da5601f53c7e2084859ab82120.bindPopup(popup_7a6b961a66e436435199e90c41f3f13e)
         ;
 
         
     
     
-            marker_cluster_21823f81a5b38a0f35c0b5b57b5570d0.addTo(map_2ae822b5d99ca88e2b37436dee04fb0d);
+            marker_cluster_e73c07da5818c405bf5a122fcb62d112.addTo(map_60fd8fbca42039c3e3e41c5f62b0d3dc);
         
     
-            var locate_control_09dc99135b76ebd2df0166e264a93fd9 = L.control.locate(
+            var locate_control_29b87c70932e248a120c7172bfd74df9 = L.control.locate(
                 {}
-            ).addTo(map_2ae822b5d99ca88e2b37436dee04fb0d);
+            ).addTo(map_60fd8fbca42039c3e3e41c5f62b0d3dc);
             
         
 </script>
